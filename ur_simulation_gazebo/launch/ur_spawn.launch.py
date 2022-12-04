@@ -68,6 +68,27 @@ def launch_setup(context, *args, **kwargs):
         [FindPackageShare(description_package), "rviz", "view_robot.rviz"]
     )
 
+    joint_limit_params = PathJoinSubstitution(
+        [FindPackageShare(description_package), "config", ur_type, "joint_limits.yaml"]
+    )
+    kinematics_params = PathJoinSubstitution(
+        [FindPackageShare(description_package), "config", ur_type, "default_kinematics.yaml"]
+    )
+    physical_params = PathJoinSubstitution(
+        [FindPackageShare(description_package), "config", ur_type, "physical_parameters.yaml"]
+    )
+    visual_params = PathJoinSubstitution(
+        [FindPackageShare(description_package), "config", ur_type, "visual_parameters.yaml"]
+    )
+
+    initial_position_file = PathJoinSubstitution(
+        [FindPackageShare("ur_simulation_gazebo"), "config", "initial_positions.yaml"]
+    )
+
+    joint_limits_file = PathJoinSubstitution(
+        [FindPackageShare("ur_simulation_gazebo"), "config", "ur_joint_limits.yaml"]
+    )
+
     robot_description_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
@@ -75,6 +96,18 @@ def launch_setup(context, *args, **kwargs):
             PathJoinSubstitution(
                 [FindPackageShare(description_package), "urdf", description_file]
             ),
+            " ",
+            "joint_limit_params:=",
+            joint_limit_params,
+            " ",
+            "kinematics_params:=",
+            kinematics_params,
+            " ",
+            "physical_params:=",
+            physical_params,
+            " ",
+            "visual_params:=",
+            visual_params,
             " ",
             "safety_limits:=",
             safety_limits,
@@ -98,6 +131,16 @@ def launch_setup(context, *args, **kwargs):
             " ",
             "simulation_controllers:=",
             initial_joint_controllers,
+            " ",
+            "initial_positions_file:=",
+            initial_position_file,
+            " ",
+            "joint_limit_params:=",
+            joint_limits_file,
+            " ",
+            "joint_to_parent:=true",
+            " ",
+            "create_link_world:=true"
         ]
     )
     robot_description = {"robot_description": robot_description_content}
@@ -120,7 +163,7 @@ def launch_setup(context, *args, **kwargs):
 
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
-        executable="spawner",
+        executable="spawner.py",
         arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
     )
 
@@ -135,13 +178,13 @@ def launch_setup(context, *args, **kwargs):
     # There may be other controllers of the joints, but this is the initially-started one
     initial_joint_controller_spawner_started = Node(
         package="controller_manager",
-        executable="spawner",
+        executable="spawner.py",
         arguments=[initial_joint_controller, "-c", "/controller_manager"],
         condition=IfCondition(start_joint_controller),
     )
     initial_joint_controller_spawner_stopped = Node(
         package="controller_manager",
-        executable="spawner",
+        executable="spawner.py",
         arguments=[initial_joint_controller, "-c", "/controller_manager", "--stopped"],
         condition=UnlessCondition(start_joint_controller),
     )
@@ -183,7 +226,7 @@ def generate_launch_description():
             "ur_type",
             description="Type/series of used UR robot.",
             choices=["ur3", "ur3e", "ur5", "ur5e", "ur10", "ur10e", "ur16e"],
-            default_value="ur5e",
+            default_value="ur5",
         )
     )
     declared_arguments.append(
