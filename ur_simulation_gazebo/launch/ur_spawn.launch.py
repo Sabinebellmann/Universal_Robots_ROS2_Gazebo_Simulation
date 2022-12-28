@@ -85,16 +85,12 @@ def launch_setup(context, *args, **kwargs):
         [FindPackageShare("ur_simulation_gazebo"), "config", "initial_positions.yaml"]
     )
 
-    joint_limits_file = PathJoinSubstitution(
-        [FindPackageShare("ur_simulation_gazebo"), "config", "ur_joint_limits.yaml"]
-    )
-
     robot_description_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
             PathJoinSubstitution(
-                [FindPackageShare(description_package), "urdf", description_file]
+                [FindPackageShare("ur_simulation_gazebo"), "urdf", description_file]
             ),
             " ",
             "joint_limit_params:=",
@@ -119,9 +115,6 @@ def launch_setup(context, *args, **kwargs):
             safety_k_position,
             " ",
             "name:=",
-            "ur",
-            " ",
-            "ur_type:=",
             ur_type,
             " ",
             "prefix:=",
@@ -134,13 +127,6 @@ def launch_setup(context, *args, **kwargs):
             " ",
             "initial_positions_file:=",
             initial_position_file,
-            " ",
-            "joint_limit_params:=",
-            joint_limits_file,
-            " ",
-            "joint_to_parent:=true",
-            " ",
-            "create_link_world:=true"
         ]
     )
     robot_description = {"robot_description": robot_description_content}
